@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>上传demo</title>
+  <link rel="stylesheet" type="text/css" th:href="@{/static/css/Huploadify.css}"/>
+  <script type="text/javascript" th:src="@{/static/js/jquery.js}"></script>
+  <script type="text/javascript" th:src="@{/static/js/jquery.Huploadify.js}"></script>
+  <style type="text/css">
+  </style>
+  <script type="text/javascript">
+    $(function(){
+      var up = $('#upload').Huploadify({
+        auto:false,
+        fileTypeExts:'*.jpg;*.png;*.exe;*.mp3;*.mp4;*.zip;*.doc;*.docx;*.ppt;*.pptx;*.xls;*.xlsx;*.pdf',
+        multi:true,
+        fileSizeLimit:1024*1024*3000,
+        // breakPoints:true,
+        saveInfoLocal:true,
+        showUploadedPercent:true,//是否实时显示上传的百分比，如20%
+        // showUploadedSize:true,
+        removeTimeout:9999999,
+        uploader:'file/upload',
+        onUploadSuccess:function(msg){
+          console.table(msg);
+          console.log(timeStamp2String(msg.lastModifiedDate));
+        },
+        /*getUploadedSize:function(file){
+          var data = {
+            data : {
+              fileName : file.name,
+              lastModifiedDate : file.lastModifiedDate.getTime()
+            }
+          };
+          var url = 'http://localhost/uploadfile/';
+          var uploadedSize = 0;
+          $.ajax({
+            url : url,
+            data : data,
+            async : false,
+            type : 'POST',
+            success : function(returnData){
+              returnData = JSON.parse(returnData);
+              uploadedSize = returnData.uploadedSize;
+            }
+          });
+          return uploadedSize;
+        }	*/
+      });
+
+      $('#btn1').click(function(){
+        up.stop();
+      });
+      $('#btn2').click(function(){
+        up.upload('*');
+      });
+      $('#btn3').click(function(){
+        up.cancel('*');
+      });
+      $('#btn4').click(function(){
+        up.disable();
+      });
+      $('#btn5').click(function(){
+        up.ennable();
+      });
+
+    });
+
+
+    function timeStamp2String(time) {
+      var datetime = new Date();
+      datetime.setTime(time);
+      var year = datetime.getFullYear();
+      var month = datetime.getMonth() + 1 < 10 ? "0" + (datetime.getMonth() + 1) : datetime.getMonth() + 1;
+      var date = datetime.getDate() < 10 ? "0" + datetime.getDate() : datetime.getDate();
+      var hour = datetime.getHours() < 10 ? "0" + datetime.getHours() : datetime.getHours();
+      var minute = datetime.getMinutes() < 10 ? "0" + datetime.getMinutes() : datetime.getMinutes();
+      var second = datetime.getSeconds() < 10 ? "0" + datetime.getSeconds() : datetime.getSeconds();
+      return year + "-" + month + "-" + date + " " + hour + ":" + minute + ":" + second;
+    }
+
+  </script>
+</head>
+
+<body>
+<div id="upload"></div>
+<button id="btn1">stop</button>
+<button id="btn2">upload</button>
+<button id="btn3">cancel</button>
+<button id="btn4">disable</button>
+<button id="btn5">ennable</button>
+</body>
+</html>

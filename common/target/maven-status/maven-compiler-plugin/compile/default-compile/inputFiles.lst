@@ -1,0 +1,6 @@
+/media/kqkd/software/Projects/cloud-storage/common/src/main/java/info/kqkd/cloud/pojo/User.java
+/media/kqkd/software/Projects/cloud-storage/common/src/main/java/info/kqkd/cloud/dao/UserMapper.java
+/media/kqkd/software/Projects/cloud-storage/common/src/main/java/info/kqkd/cloud/pojo/File.java
+/media/kqkd/software/Projects/cloud-storage/common/src/main/java/info/kqkd/cloud/pojo/UserFile.java
+/media/kqkd/software/Projects/cloud-storage/common/src/main/java/info/kqkd/cloud/dao/FileMapper.java
+/media/kqkd/software/Projects/cloud-storage/common/src/main/java/info/kqkd/cloud/dao/UserFileMapper.java

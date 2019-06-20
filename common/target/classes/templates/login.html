@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <title>[[${not #request.getRequestURI().contains('register')?'登录':'注册'}]]</title>
+    <link rel="stylesheet" th:href="@{/static/assets/libs/layui/css/layui.css}"/>
+    <link rel="stylesheet" th:href="@{/static/assets/css/login.css?v=312}">
+    <script th:src="@{/static/assets/js/jquery.js}"></script>
+    <script th:src="@{/static/assets/js/md5.js}"></script>
+    <style>
+        .send {
+            background: #4aca85
+        }
+    </style>
+</head>
+<body>
+<div class="login-wrapper">
+    <div class="login-header">
+        <img th:src="@{/static/assets/images/logo.png}" >[[${not #request.getRequestURI().contains('register')?'&nbsp;SpeedPan登录界面':'&nbsp;SpeedPan注册界面'}]]
+    </div>
+    <div class=" login-body">
+        <div class="layui-card">
+            <div class="layui-card-header">
+                <i class="layui-icon layui-icon-engine"></i>&nbsp;&nbsp;[[${not #request.getRequestURI().contains('register')?'用户登录':'用户注册'}]]
+            </div>
+            <form class="layui-card-body layui-form layui-form-pane">
+                <div class="layui-form-item">
+                    <label class="layui-form-label"><i class="layui-icon layui-icon-username"></i></label>
+                    <div class="layui-input-block">
+                        <input name="userAccount" type="text" placeholder="请输入账号" class="layui-input"
+                               lay-verType="tips" lay-verify="required" required/>
+                    </div>
+                </div>
+                <div class="layui-form-item">
+                    <label class="layui-form-label"><i class="layui-icon layui-icon-password"></i></label>
+                    <div class="layui-input-block">
+                        <input name="userPassword" id="pwd" type="password" placeholder="请输入密码" class="layui-input"
+                               lay-verType="tips" lay-verify="required" required/>
+                    </div>
+                </div>
+                <div class="layui-form-item" th:if="${ not #request.getRequestURI().contains('register')}">
+                    <label class="layui-form-label"><i class="layui-icon layui-icon-vercode"></i></label>
+                    <div class="layui-input-block">
+                        <div class="layui-row inline-block">
+                            <div class="layui-col-xs7">
+                                <input name="verifyCode" type="text" placeholder="验证码" class="layui-input"
+                                       autocomplete="off" lay-verType="tips" lay-verify="required" required/>
+                            </div>
+                            <div class="layui-col-xs5" style="padding-left: 6px;">
+                                <img class="login-captcha" src="verifyCode">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item" th:if="${ #request.getRequestURI().contains('register')}">
+                    <label class="layui-form-label"><i class="layui-icon layui-icon-password"></i></label>
+                    <div class="layui-input-block">
+                        <input name="confirm_pwd" id="confirm_pwd" type="password" placeholder="请确认密码" class="layui-input"
+                               lay-verType="tips" lay-verify="required" required/>
+                    </div>
+                </div>
+                <div class="layui-form-item" th:if="${ #request.getRequestURI().contains('register')}">
+                    <label class="layui-form-label"><i class="layui-icon layui-icon-release"></i></label>
+                    <div class="layui-input-block">
+                        <input name="userEmail" id="email" lay-verify="email" type="text" placeholder="请输入邮箱" class="layui-input"
+                               lay-verType="tips" required/>
+                    </div>
+                </div>
+                <div class="layui-form-item" th:if="${ #request.getRequestURI().contains('register')}">
+                    <label class="layui-form-label"><i class="layui-icon layui-icon-vercode"></i></label>
+                    <div class="layui-input-block">
+                        <div class="layui-row inline-block">
+                            <div class="layui-col-xs7">
+                                <input name="mailCode" type="text" placeholder="验证码" class="layui-input"
+                                       autocomplete="off" lay-verType="tips" lay-verify="required" required/>
+                            </div>
+                            <div class="layui-col-xs5" style="padding-left: 6px;">
+                                <a href="#" id="sendEmilBtn" class="layui-btn send">发送验证码</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="layui-form-item" th:if="${not #request.getRequestURI().contains('register')}">
+                    <a href="register" class="layui-link">帐号注册</a>
+                    <a href="javascript:;" class="layui-link pull-right">忘记密码？</a>
+                </div>
+                <div class="layui-form-item">
+                    <button lay-filter="login-submit" style="background: #4aca85" class="layui-btn layui-btn-fluid" lay-submit>
+                        [[${not #request.getRequestURI().contains('register')?'登 录':'注 册'}]]</button>
+                </div>
+                <div class="layui-form-item login-other" th:if="${not #request.getRequestURI().contains('register')}">
+                    <label>第三方登录</label>
+                    <a href="javascript:;"><i class="layui-icon layui-icon-login-qq"></i></a>
+                    <a href="javascript:;"><i class="layui-icon layui-icon-login-wechat"></i></a>
+                    <a href="javascript:;"><i class="layui-icon layui-icon-login-weibo"></i></a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="login-footer">
+        <p>© 2019 kqkd.info 版权所有</p>
+        <!--        <p>-->
+        <!--            <span><a href="https://easyweb.vip" target="_blank">获取授权</a></span>-->
+        <!--            <span><a href="https://easyweb.vip/doc" target="_blank">开发文档</a></span>-->
+        <!--            <span><a href="https://demo.easyweb.vip/iframe/" target="_blank">iframe版</a></span>-->
+        <!--        </p>-->
+    </div>
+</div>
+
+<script type="text/javascript" th:src="@{/static/assets/libs/layui/layui.js}"></script>
+<script th:src="@{/static/assets/js/md5.js}"></script>
+<script>
+    layui.config({
+        base: 'static/assets/module/'
+    }).use(['config', 'form', 'layer'], function () {
+        var $ = layui.jquery;
+        var form = layui.form;
+        var config = layui.config;
+        var layer = layui.layer;
+        var time = 60;
+        var clock = '';
+        var mailBtn = $('#sendEmilBtn');
+
+
+        mailBtn.on('click', function () {
+            var self = $(this);
+            if (self.attr('class') === 'layui-btn layui-btn-disabled') {
+                return;
+            }
+            var mail = $('#email').val();
+            $.get('mailCode', {'mail': mail}, function (msg) {
+                if (msg == true) {
+                    self.attr('class', 'layui-btn layui-btn-disabled');
+                    clock = setInterval(timeChange, 1000);
+                }
+                else {
+                    layer.msg("邮件服务器错误!", {time: 2000})
+                }
+
+            }, 'json')
+        });
+
+        function timeChange() {
+            time --;
+            console.log(time);
+            if(time > 0){
+                mailBtn.text(time+'秒后刷新');
+            }else{
+                clearInterval(clock); //清除js定时器
+                mailBtn.attr('class', 'layui-btn send');
+                mailBtn.val('发送验证码');
+                time = 60; //重置时间
+            }
+        }
+
+        if (config.getToken()) {
+            // location.replace('./');
+            // return;
+        }
+
+        // 表单提交
+        form.on('submit(login-submit)', function (data) {
+            var field = data.field;
+            layer.load(2);
+            if (field.mailCode) {
+                console.log(field);
+                $.ajax({
+                    url: 'checkRegister',
+                    type: 'post',
+                    data: field,
+                    dataType: 'json',
+                    success: function (data) {
+                        if (data.result == true) {
+                            layer.closeAll();
+                            layer.msg('注册成功！三秒之后会自动跳转到登录界面', {time: 3000, btn: '确定', btnAlign: 'c'}, function () {
+                                window.location.replace('login.html');
+                            });
+                        } else {
+                            layer.closeAll();
+                            layer.msg('验证码错误！', {time: 0, btn: '确定', btnAlign: 'c'}, function () {
+                                // window.location.replace('/');
+                            });
+                        }
+                    }
+                });
+            } else {
+                /* 获取随机字符串 */
+                $.get('randomStr', function (msg) {
+                    field.randomStr = msg;
+                });
+                field.userPassword = $.md5(field.userPassword);
+                $.ajax({
+                    url: 'checkLogin',
+                    data: field,
+                    type: 'POST',
+                    dataType: 'JSON',
+                    success: function (res) {
+                        if (res.access_token) {
+                            config.putToken(res);
+                            layer.msg('登录成功', {icon: 1, time: 1000}, function () {
+                                window.location.replace('/');
+                            });
+                        } else {
+                            layer.closeAll('loading');
+                            layer.msg('登录失败，请重试', {icon: 5});
+                        }
+                    },
+                    error: function (xhr) {
+                        layer.closeAll('loading');
+                        if (xhr.status == 400) {
+                            layer.msg('账号或密码错误', {icon: 5});
+                        }
+                    }
+                });
+            }
+
+            // field.grant_type = 'password';
+            // field.scope = 'select';
+            // field.client_id = 'client_2';
+            // field.client_secret = '123456';
+
+            return false;
+        });
+
+        // 图形验证码
+        $('.login-captcha').click(function () {
+            this.src = this.src + '?t=' + (new Date).getTime();
+        });
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="info.kqkd.cloud.dao.FileMapper">
+
+    <resultMap id="fileMap" type="File">
+        <id column="id" property="id"/>
+        <result column="file_name" property="fileName"/>
+        <result column="type" property="type"/>
+        <result column="is_dir" property="isDir"/>
+        <result column="file_sha1" property="fileSha1"/>
+        <result column="file_size" property="fileSize"/>
+        <result column="file_addr" property="fileAddr"/>
+        <result column="sm_url" property="smUrl"/>
+        <result column="create_date" property="createDate"/>
+        <result column="update_date" property="updateDate"/>
+        <result column="status" property="status"/>
+        <result column="ext1" property="ext1"/>
+        <result column="ext2" property="ext2"/>
+        <collection property="userFiles" ofType="UserFile">
+            <association property="user" javaType="User"/>
+        </collection>
+    </resultMap>
+
+    <!--<select id="fileList" parameterType="string" resultType="File">
+        SELECT f.id,
+               file_name,
+               type,
+               is_dir,
+               file_sha1,
+               file_size,
+               file_addr,
+               sm_url,
+               create_date,
+               update_date,
+               `status`
+        FROM t_file f
+        LEFT JOIN t_user_file uf ON f.id = uf.file_id
+        WHERE uf.user_id = #{} ;
+    </select>-->
+</mapper>

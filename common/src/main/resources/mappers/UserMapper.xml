@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="info.kqkd.cloud.dao.UserMapper">
+
+
+    <resultMap id="UserInfo" type="User">
+        <result column="user_account" property="userAccount"/>
+        <result column="user_password" property="userPassword"/>
+        <result column="user_email" property="userEmail"/>
+        <result column="user_phone" property="userPhone"/>
+        <association property="role" javaType="Role" column="role_id" select="selectRoleById"/>
+    </resultMap>
+
+    <resultMap id="RoleInfo" type="Role">
+        <result column="r_name" property="rName"/>
+        <collection property="menuList" ofType="Menu" column="id" select="selectMenuByRoleId"/>
+    </resultMap>
+
+    <select id="selectRoleById" parameterType="int" resultMap="RoleInfo">
+        select r_name, id from t_role where id = #{role_id}
+    </select>
+
+
+    <resultMap id="MenuInfo" type="Menu">
+        <result property="name" column="m_name"/>
+        <result property="icon" column="m_icon"/>
+        <result property="url" column="m_url"/>
+        <collection property="subMenus" ofType="Page" column="id" select="selectPageByMenuId"/>
+    </resultMap>
+
+    <select id="selectMenuByRoleId" parameterType="int" resultMap="MenuInfo">
+        select m_url, m_icon, m_name, id from t_menu where role_id = #{id}
+    </select>
+
+    <select id="selectPageByMenuId" parameterType="int" resultType="Page">
+        select name, url, icon from t_page where menu_id = #{id}
+    </select>
+
+    <select id="getCurrentUser" parameterType="string" resultMap="UserInfo">
+        select id, user_account, user_password, user_email, user_phone, role_id from t_user where user_account = #{userAccount}
+    </select>
+
+</mapper>
