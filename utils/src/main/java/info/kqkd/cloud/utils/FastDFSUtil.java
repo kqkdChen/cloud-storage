@@ -6,11 +6,11 @@ import org.csource.common.NameValuePair;
 import org.csource.fastdfs.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
 
-@Component
 public class FastDFSUtil {
 
 
@@ -18,33 +18,56 @@ public class FastDFSUtil {
     private static String fastProperties = "fastdfs-client.properties";
 
     static {
+        //加载fastDFS客户端的配置 文件
         try {
             ClientGlobal.initByProperties(fastProperties);
         } catch (IOException | MyException e) {
             e.printStackTrace();
         }
-
     }
 
-    /**
-     *  FDFS 文件上传类
-     * @param fileName
-     * @return
-     * @throws IOException
-     * @throws MyException
-     */
-    public static String upload(String fileName, InputStream inputStream) throws IOException, MyException {
+
+    public String upload(String realPath, String fileName, String extension) throws IOException, MyException {
+        //创建tracker的客户端
         TrackerClient tracker = new TrackerClient();
         TrackerServer trackerServer = tracker.getConnection();
         StorageServer storageServer = null;
+        //定义storage的客户端
         StorageClient1 client = new StorageClient1(trackerServer, storageServer);
+        //文件元信息
         NameValuePair[] metaList = new NameValuePair[1];
         metaList[0] = new NameValuePair("fileName", fileName);
-        byte[] bytes = IoUtil.readBytes(inputStream);
-        String fileId = client.upload_appender_file1(bytes, fileName.split("\\.")[1], metaList);
+        //执行上传，将上传成功的存放在web服务器（本机）上的文件上传到 fastDFS
+        String fileId = client.upload_appender_file1(realPath, extension, metaList);
+//        client.upload_appender_file1
         trackerServer.close();
         return fileId;
     }
+
+
+    private static class UploadFileSender implements UploadCallback {
+        private InputStream inStream;
+
+        public UploadFileSender(InputStream inStream) {
+            this.inStream = inStream;
+        }
+
+        public int send(OutputStream out) throws IOException {
+            if (inStream instanceof FileInputStream) {
+                inStream = new BufferedInputStream(inStream);
+            }
+            byte[] buff = new byte[4096];
+            int off;
+            while ((off = inStream.read(buff)) != -1) {
+                out.write(buff, 0, off);
+            }
+            out.flush();
+            inStream.close();
+            return 0;
+        }
+    }
+
+
 
     /**
      *  FDFS 文件下载类
@@ -54,6 +77,7 @@ public class FastDFSUtil {
      * @throws MyException
      */
     public static void download(HttpServletResponse response, String fileAddr, String realFileName) throws IOException, MyException {
+        ClientGlobal.initByProperties("fastdfs-client.properties");
         TrackerClient tracker = new TrackerClient();
         TrackerServer trackerServer = tracker.getConnection();
         StorageServer storageServer = null;
@@ -65,6 +89,7 @@ public class FastDFSUtil {
     }
 
     public static FileInfo query(String fileAddr) throws IOException, MyException {
+        ClientGlobal.initByProperties(fastProperties);
         TrackerClient tracker = new TrackerClient();
         TrackerServer trackerServer = tracker.getConnection();
         StorageServer storageServer = null;
@@ -76,17 +101,19 @@ public class FastDFSUtil {
 
     }
 
-    public static void append(InputStream inputStream, String appendFIleAddr) throws IOException, MyException {
+    public void append(String appendFileId, String localFilePath) throws IOException, MyException {
+        ClientGlobal.initByProperties(fastProperties);
         TrackerClient tracker = new TrackerClient();
         TrackerServer trackerServer = tracker.getConnection();
         StorageServer storageServer = null;
         StorageClient1 client = new StorageClient1(trackerServer, storageServer);
-        byte[] buff = new byte[1024 * 1024 * 2];
-        int len;
-        while ((len = inputStream.read(buff, 0, buff.length)) != -1) {
-            int i = client.append_file1(appendFIleAddr, buff, 0, len);
-            System.out.println(i);
-        }
+        int i = client.append_file1(appendFileId, localFilePath);
+        System.out.println(i);
+//        byte[] buff = new byte[1024 * 1024 * 2];
+//        int len;
+//        while ((len = inputStream.read(buff, 0, buff.length)) != -1) {
+//            int i = client.append_file1(appendFileId, buff, 0, len);
+//        }
         trackerServer.close();
     }
 
@@ -95,7 +122,7 @@ public class FastDFSUtil {
 //        System.out.println(upload("/home/kqkd/Desktop/尚硅谷SpringBoot整合篇/课件.zip"));
 //        query("group1/M00/00/00/wKgCGF0C30aAcgCqBDiRuhPK9jQ245.pdf");
 //        FileInputStream fileInputStream = new FileInputStream("/home/kqkd/Desktop/Java程序性能优化  让你的Java程序更快、更稳定.pdf");
-        append(new FileInputStream("/home/kqkd/Desktop/vip会员视频清单.txt"), "group1/M00/00/00/wKgCI10C7XiEflqlAAAAAAgQJ_A664.zip");
+//        append(new FileInputStream("/home/kqkd/Desktop/vip会员视频清单.txt"), "group1/M00/00/00/wKgCI10C7XiEflqlAAAAAAgQJ_A664.zip");
 
 //        System.out.println(upload("vip会员视频清单.txt",));
     }

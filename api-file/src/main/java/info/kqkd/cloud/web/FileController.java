@@ -7,6 +7,8 @@ import info.kqkd.cloud.service.IFileService;
 import info.kqkd.cloud.utils.FastDFSUtil;
 import info.kqkd.cloud.utils.RedisUtil;
 import org.csource.common.MyException;
+import org.csource.common.NameValuePair;
+import org.csource.fastdfs.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -15,10 +17,14 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * <p>
@@ -40,6 +46,8 @@ public class FileController {
     @Autowired
     private RedisUtil redisUtil;
 
+
+
     @GetMapping("/{id}")
     public File getFileByUser(@PathVariable("id") Integer id) {
         return fileService.getById(id);
@@ -56,20 +64,28 @@ public class FileController {
 
 
     @PostMapping("/upload")
-    public void upload(String fileName, @RequestParam("file") MultipartFile file) throws IOException, ServletException, MyException {
+    public void upload(String fileName, @RequestParam("file") MultipartFile file) throws IOException, MyException {
         System.out.println(file.getSize());
+        // 获取拓展名
+        String extension = fileName.substring(fileName.lastIndexOf("."));
+        // 重命名文件
+        String saveFileName = UUID.randomUUID() + extension;
+        // 临时文件实际存储路径
+        String realPath = System.getProperty("user.dir") + "/upload" + java.io.File.separator + saveFileName;
+        // 先将文件临时存储在web服务器在本地
+        file.transferTo(new java.io.File(realPath));
         redisUtil.setRedisTemplate(redisTemplate);
         redisUtil.setDataBase(2);
+        FastDFSUtil fastDFSUtil = new FastDFSUtil();
         if (!redisUtil.hasKey(fileName)) {
-            // 没有这个文件表示第一次上传
-            String fileId = FastDFSUtil.upload(fileName, file.getInputStream());
-            System.out.println("文件第一次上传" + fileId);
+            String fileId = fastDFSUtil.upload(realPath, fileName, extension.split("\\.")[1]);
+            System.out.println(fileId);
             redisUtil.set(fileName, fileId);
         } else {
             // 有这个文件表示已经已经上传过了
             System.out.println("文件追加开始了");
             String fileId = (String) redisUtil.get(fileName);
-            FastDFSUtil.append(file.getInputStream(), fileId);
+            new FastDFSUtil().append(fileId, realPath);
         }
     }
 
