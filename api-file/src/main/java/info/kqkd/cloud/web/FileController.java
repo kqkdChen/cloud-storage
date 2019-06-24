@@ -15,10 +15,8 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.Part;
-import java.io.*;
+import java.io.IOException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -39,38 +37,40 @@ public class FileController {
     @Autowired
     private RedisTemplate redisTemplate;
 
+    @Autowired
+    private RedisUtil redisUtil;
 
     @GetMapping("/{id}")
     public File getFileByUser(@PathVariable("id") Integer id) {
         return fileService.getById(id);
     }
 
+    @GetMapping("/getUploadSize")
+    public Integer getUploadSize(String fileSHA1) {
+        RedisUtil redisUtil = new RedisUtil();
+        redisUtil.setRedisTemplate(redisTemplate);
+        redisUtil.setDataBase(2);
+        Integer uploadSize = (Integer) redisUtil.get(fileSHA1);
+        return uploadSize;
+    }
+
+
     @PostMapping("/upload")
-    public Map<String, Object> upload(HttpServletRequest request, @RequestParam("file") MultipartFile file) throws IOException, ServletException {
-        String fileName = System.currentTimeMillis()+file.getOriginalFilename();
-        System.out.println(fileName);
-        Part file1 = request.getPart("file");
-//        InputStream inputStream = file1.getInputStream();
-       /* BufferedInputStream bis = new BufferedInputStream(inputStream);
-        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream("/media/kqkd/software/Projects/cloud-storage/upload/1560410729735课件.zip", true));
-        byte[] bytes = new byte[1024 * 1024 * 2];
-        int len;
-        while ((len = bis.read(bytes, 0, bytes.length)) != -1) {
-            bufferedOutputStream.write(bytes, 0, len);
-            bufferedOutputStream.flush();
-        }*/
-        String realPath = System.getProperty("user.dir") + "/upload" + java.io.File.separator + fileName;
-        java.io.File destFile = new java.io.File (realPath);
-        destFile.getParentFile().mkdirs();
-        Map<String, Object> map = new HashMap<>();
-        try {
-            file.transferTo(destFile);
-            map.put("fileName", fileName);
-            map.put("lastModifiedDate", new Date());
-        } catch (IOException e) {
-            e.printStackTrace();
+    public void upload(String fileName, @RequestParam("file") MultipartFile file) throws IOException, ServletException, MyException {
+        System.out.println(file.getSize());
+        redisUtil.setRedisTemplate(redisTemplate);
+        redisUtil.setDataBase(2);
+        if (!redisUtil.hasKey(fileName)) {
+            // 没有这个文件表示第一次上传
+            String fileId = FastDFSUtil.upload(fileName, file.getInputStream());
+            System.out.println("文件第一次上传" + fileId);
+            redisUtil.set(fileName, fileId);
+        } else {
+            // 有这个文件表示已经已经上传过了
+            System.out.println("文件追加开始了");
+            String fileId = (String) redisUtil.get(fileName);
+            FastDFSUtil.append(file.getInputStream(), fileId);
         }
-        return map;
     }
 
     @GetMapping("/download")
@@ -88,7 +88,7 @@ public class FileController {
      */
     @GetMapping("/list")
     public Map<String, Object> fileList(HttpServletRequest request, @RequestParam(value = "curr", defaultValue = "0") Integer curr,
-                                 @RequestParam(value = "limit", defaultValue = "50") Integer limit) {
+                                        @RequestParam(value = "limit", defaultValue = "50") Integer limit) {
         String authorization = request.getHeader("Authorization");
         RedisUtil redisUtil = new RedisUtil();
         redisUtil.setRedisTemplate(redisTemplate);

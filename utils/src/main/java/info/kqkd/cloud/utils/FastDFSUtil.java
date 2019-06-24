@@ -1,5 +1,6 @@
 package info.kqkd.cloud.utils;
 
+import cn.hutool.core.io.IoUtil;
 import org.csource.common.MyException;
 import org.csource.common.NameValuePair;
 import org.csource.fastdfs.*;
@@ -7,10 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 @Component
 public class FastDFSUtil {
@@ -35,14 +33,15 @@ public class FastDFSUtil {
      * @throws IOException
      * @throws MyException
      */
-    public static String upload(String fileName) throws IOException, MyException {
+    public static String upload(String fileName, InputStream inputStream) throws IOException, MyException {
         TrackerClient tracker = new TrackerClient();
         TrackerServer trackerServer = tracker.getConnection();
         StorageServer storageServer = null;
         StorageClient1 client = new StorageClient1(trackerServer, storageServer);
         NameValuePair[] metaList = new NameValuePair[1];
         metaList[0] = new NameValuePair("fileName", fileName);
-        String fileId = client.upload_appender_file1(fileName, null, metaList);
+        byte[] bytes = IoUtil.readBytes(inputStream);
+        String fileId = client.upload_appender_file1(bytes, fileName.split("\\.")[1], metaList);
         trackerServer.close();
         return fileId;
     }
@@ -96,8 +95,9 @@ public class FastDFSUtil {
 //        System.out.println(upload("/home/kqkd/Desktop/尚硅谷SpringBoot整合篇/课件.zip"));
 //        query("group1/M00/00/00/wKgCGF0C30aAcgCqBDiRuhPK9jQ245.pdf");
 //        FileInputStream fileInputStream = new FileInputStream("/home/kqkd/Desktop/Java程序性能优化  让你的Java程序更快、更稳定.pdf");
-//        append(fileInputStream, "group1/M00/00/00/wKgCI10C7XiEflqlAAAAAAgQJ_A664.zip");
-        System.out.println(upload("/home/kqkd/Desktop/尚硅谷SpringBoot整合篇/视频/2、尚硅谷-SpringBoot高级-缓存-Spring缓存抽象简介.avi"));
+        append(new FileInputStream("/home/kqkd/Desktop/vip会员视频清单.txt"), "group1/M00/00/00/wKgCI10C7XiEflqlAAAAAAgQJ_A664.zip");
+
+//        System.out.println(upload("vip会员视频清单.txt",));
     }
 
 
