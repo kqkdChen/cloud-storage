@@ -78,7 +78,7 @@ public class FileController {
         redisUtil.setDataBase(2);
         FastDFSUtil fastDFSUtil = new FastDFSUtil();
         if (!redisUtil.hasKey(fileName)) {
-            String fileId = fastDFSUtil.upload(realPath, fileName, extension.split("\\.")[1]);
+            String fileId = fastDFSUtil.upload2(realPath, file, fileName, extension.split("\\.")[1]);
             System.out.println(fileId);
             redisUtil.set(fileName, fileId);
         } else {

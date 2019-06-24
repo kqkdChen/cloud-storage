@@ -18,8 +18,8 @@ public class FastDFSUtil {
     private static String fastProperties = "fastdfs-client.properties";
 
     static {
-        //加载fastDFS客户端的配置 文件
         try {
+            //加载fastDFS客户端的配置 文件
             ClientGlobal.initByProperties(fastProperties);
         } catch (IOException | MyException e) {
             e.printStackTrace();
@@ -39,7 +39,23 @@ public class FastDFSUtil {
         metaList[0] = new NameValuePair("fileName", fileName);
         //执行上传，将上传成功的存放在web服务器（本机）上的文件上传到 fastDFS
         String fileId = client.upload_appender_file1(realPath, extension, metaList);
-//        client.upload_appender_file1
+        trackerServer.close();
+        return fileId;
+    }
+
+    public String upload2(String realPath, MultipartFile file,  String fileName, String extension) throws IOException, MyException {
+        //创建tracker的客户端
+        TrackerClient tracker = new TrackerClient();
+        TrackerServer trackerServer = tracker.getConnection();
+        StorageServer storageServer = null;
+        //定义storage的客户端
+        StorageClient1 client = new StorageClient1(trackerServer, storageServer);
+        //文件元信息
+        NameValuePair[] metaList = new NameValuePair[1];
+        metaList[0] = new NameValuePair("fileName", fileName);
+        //执行上传，将上传成功的存放在web服务器（本机）上的文件上传到 fastDFS
+        String fileId = client.upload_appender_file1(null, file.getSize(),
+                new UploadFileSender(file.getInputStream()), extension, metaList);
         trackerServer.close();
         return fileId;
     }
@@ -77,7 +93,6 @@ public class FastDFSUtil {
      * @throws MyException
      */
     public static void download(HttpServletResponse response, String fileAddr, String realFileName) throws IOException, MyException {
-        ClientGlobal.initByProperties("fastdfs-client.properties");
         TrackerClient tracker = new TrackerClient();
         TrackerServer trackerServer = tracker.getConnection();
         StorageServer storageServer = null;
@@ -89,7 +104,6 @@ public class FastDFSUtil {
     }
 
     public static FileInfo query(String fileAddr) throws IOException, MyException {
-        ClientGlobal.initByProperties(fastProperties);
         TrackerClient tracker = new TrackerClient();
         TrackerServer trackerServer = tracker.getConnection();
         StorageServer storageServer = null;
@@ -102,7 +116,6 @@ public class FastDFSUtil {
     }
 
     public void append(String appendFileId, String localFilePath) throws IOException, MyException {
-        ClientGlobal.initByProperties(fastProperties);
         TrackerClient tracker = new TrackerClient();
         TrackerServer trackerServer = tracker.getConnection();
         StorageServer storageServer = null;
