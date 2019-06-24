@@ -23,16 +23,16 @@ public class MvcConfig implements WebMvcConfigurer {
         return new CorsFilter();
     }
 
-    // 登陆以及权限拦截器
-    @Bean
-    public LoginInterceptor loginInterceptor() {
-        return new LoginInterceptor();
-    }
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(loginInterceptor()).addPathPatterns("/**")
-                .excludePathPatterns("/login", "/register", "/randomStr", "/verifyCode", "/mailCode", "/druid");
-    }
+//    // 登陆以及权限拦截器
+//    @Bean
+//    public LoginInterceptor loginInterceptor() {
+//        return new LoginInterceptor();
+//    }
+//
+//    @Override
+//    public void addInterceptors(InterceptorRegistry registry) {
+//        registry.addInterceptor(loginInterceptor()).addPathPatterns("/**")
+//                .excludePathPatterns("/login", "/register", "/randomStr", "/verifyCode", "/mailCode", "/druid");
+//    }
 
 }

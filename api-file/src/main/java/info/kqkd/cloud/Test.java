@@ -4,8 +4,10 @@ import cn.hutool.crypto.digest.DigestUtil;
 import org.csource.common.MyException;
 import org.csource.fastdfs.*;
 
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 
 public class Test {
 
@@ -23,8 +25,10 @@ public class Test {
 //        FileOutputStream outputStream = new FileOutputStream("/home/kqkd/Desktop/haha.md");
 //        outputStream.write(bytes);
 
-        System.out.println(DigestUtil.md5Hex(DigestUtil.md5Hex("m4mv05wi37") + DigestUtil.md5Hex("123")));
-        System.out.println(DigestUtil.md5Hex("123"));
+//        System.out.println(DigestUtil.md5Hex(DigestUtil.md5Hex("m4mv05wi37") + DigestUtil.md5Hex("123")));
+//        System.out.println(DigestUtil.md5Hex("123"));
+        FileInputStream inputStream = new FileInputStream("/home/kqkd/Desktop/vip会员视频清单.txt");
+        System.out.println(DigestUtil.sha1Hex(inputStream));
 
 
 //        NameValuePair[] metaList = new NameValuePair[1];

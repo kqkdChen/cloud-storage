@@ -13,4 +13,5 @@ import info.kqkd.cloud.pojo.Role;
  */
 public interface IRoleService extends IService<Role> {
 
+
 }

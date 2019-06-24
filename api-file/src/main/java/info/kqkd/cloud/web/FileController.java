@@ -1,7 +1,6 @@
 package info.kqkd.cloud.web;
 
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import info.kqkd.cloud.pojo.File;
 import info.kqkd.cloud.pojo.User;
 import info.kqkd.cloud.service.IFileService;
@@ -51,18 +50,15 @@ public class FileController {
         String fileName = System.currentTimeMillis()+file.getOriginalFilename();
         System.out.println(fileName);
         Part file1 = request.getPart("file");
-        InputStream inputStream = file1.getInputStream();
-        BufferedInputStream bis = new BufferedInputStream(inputStream);
+//        InputStream inputStream = file1.getInputStream();
+       /* BufferedInputStream bis = new BufferedInputStream(inputStream);
         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream("/media/kqkd/software/Projects/cloud-storage/upload/1560410729735课件.zip", true));
         byte[] bytes = new byte[1024 * 1024 * 2];
         int len;
         while ((len = bis.read(bytes, 0, bytes.length)) != -1) {
             bufferedOutputStream.write(bytes, 0, len);
             bufferedOutputStream.flush();
-        }
-
-
-
+        }*/
         String realPath = System.getProperty("user.dir") + "/upload" + java.io.File.separator + fileName;
         java.io.File destFile = new java.io.File (realPath);
         destFile.getParentFile().mkdirs();
