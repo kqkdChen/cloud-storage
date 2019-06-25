@@ -109,13 +109,12 @@ public class FastDFSUtil {
         trackerServer.close();
     }
 
-    public static FileInfo query(String fileAddr) throws IOException, MyException {
+    public FileInfo query(String fileAddr) throws IOException, MyException {
         TrackerClient tracker = new TrackerClient();
         TrackerServer trackerServer = tracker.getConnection();
         StorageServer storageServer = null;
-        String[] filePath = fileAddr.split(File.separator, 2);
         StorageClient1 client = new StorageClient1(trackerServer, storageServer);
-        FileInfo fileInfo = client.query_file_info(filePath[0], filePath[1]);
+        FileInfo fileInfo = client.query_file_info1(fileAddr);
         trackerServer.close();
         return fileInfo;
 

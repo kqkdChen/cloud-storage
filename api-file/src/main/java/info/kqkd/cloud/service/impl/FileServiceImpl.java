@@ -41,7 +41,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
         while (iterator.hasNext()) {
             File file = iterator.next();
             try {
-                FileInfo fileInfo = FastDFSUtil.query(file.getFileAddr());
+                FileInfo fileInfo = new FastDFSUtil().query(file.getFileAddr());
                 if (fileInfo == null) {
                     iterator.remove();
                 }

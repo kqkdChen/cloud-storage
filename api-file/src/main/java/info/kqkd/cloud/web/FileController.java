@@ -7,6 +7,7 @@ import info.kqkd.cloud.service.IFileService;
 import info.kqkd.cloud.utils.FastDFSUtil;
 import info.kqkd.cloud.utils.RedisUtil;
 import org.csource.common.MyException;
+import org.csource.fastdfs.FileInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -18,7 +19,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * <p>
@@ -48,37 +48,50 @@ public class FileController {
     }
 
     @GetMapping("/getUploadSize")
-    public Integer getUploadSize(String fileSHA1) {
+    public long getUploadSize( String fileName, String lastModifiedDate) throws IOException, MyException {
         RedisUtil redisUtil = new RedisUtil();
         redisUtil.setRedisTemplate(redisTemplate);
         redisUtil.setDataBase(2);
-        Integer uploadSize = (Integer) redisUtil.get(fileSHA1);
-        return uploadSize;
+        String redisFileKey = "file:%s:%s";
+        String redisFileKeyStr = String.format(redisFileKey, fileName, lastModifiedDate);
+        Map<Object, Object> fileMap = redisUtil.hmget(redisFileKeyStr);
+        if (fileMap.isEmpty()) {
+            System.out.println("文件没有被上传过");
+            return 0;
+        }
+        FileInfo fileInfo = new FastDFSUtil().query((String) fileMap.get("fileId"));
+        System.out.println("文件续传");
+        return fileInfo.getFileSize();
     }
 
 
     @PostMapping("/upload")
-    public void upload(String fileName, @RequestParam("file") MultipartFile file) throws IOException, MyException {
+    public void upload(String fileName, String lastModifiedDate, @RequestParam("file") MultipartFile file) throws IOException, MyException {
         // 获取拓展名
         String extension = fileName.substring(fileName.lastIndexOf("."));
-        // 重命名文件
-        String newFileName = UUID.randomUUID() + extension;
-        String redisFileKey = "file:%s:%s";  // 模块名:原来文件命:uuid文件名
-        String redisFileKeyStr = String.format(redisFileKey, fileName, newFileName);
+        String redisFileKey = "file:%s:%s";
+        String redisFileKeyStr = String.format(redisFileKey, fileName, lastModifiedDate);
         System.out.println(redisFileKeyStr);
         redisUtil.setRedisTemplate(redisTemplate);
         redisUtil.setDataBase(2);
         FastDFSUtil fastDFSUtil = new FastDFSUtil();
-        if (!redisUtil.hasKey(fileName)) {
-            System.out.println("文件第一次上传");
+        if (!redisUtil.hasKey(redisFileKeyStr)) {
             String fileId = fastDFSUtil.upload(file.getSize(), file.getInputStream(), fileName, extension.split("\\.")[1]);
+            long fileSize = fastDFSUtil.query(fileId).getFileSize();
             System.out.println(fileId);
-            redisUtil.set(redisFileKeyStr, fileId);
+            Map<String, Object> map = new HashMap<>();
+            map.put("fileId", fileId);
+            map.put("uploadSize", fileSize);
+            redisUtil.hmset(redisFileKeyStr, map);
         } else {
             // 有这个文件表示已经已经上传过了
-            System.out.println("文件追加开始了");
-            String fileId = (String) redisUtil.get(fileName);
-            new FastDFSUtil().append(fileId, file.getInputStream());
+            Map<Object, Object> fileInfo = redisUtil.hmget(redisFileKeyStr);
+            String fileId = (String) fileInfo.get("fileId");
+            fastDFSUtil.append(fileId, file.getInputStream());
+            FileInfo info = fastDFSUtil.query(fileId);
+            System.out.println("追加后的大小为" + info.getFileSize());
+            redisUtil.hset(redisFileKeyStr, "uploadSize", info.getFileSize());
+
         }
     }
 
