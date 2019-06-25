@@ -7,20 +7,14 @@ import info.kqkd.cloud.service.IFileService;
 import info.kqkd.cloud.utils.FastDFSUtil;
 import info.kqkd.cloud.utils.RedisUtil;
 import org.csource.common.MyException;
-import org.csource.common.NameValuePair;
-import org.csource.fastdfs.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -70,22 +64,18 @@ public class FileController {
         String extension = fileName.substring(fileName.lastIndexOf("."));
         // 重命名文件
         String saveFileName = UUID.randomUUID() + extension;
-        // 临时文件实际存储路径
-        String realPath = System.getProperty("user.dir") + "/upload" + java.io.File.separator + saveFileName;
-        // 先将文件临时存储在web服务器在本地
-        file.transferTo(new java.io.File(realPath));
         redisUtil.setRedisTemplate(redisTemplate);
         redisUtil.setDataBase(2);
         FastDFSUtil fastDFSUtil = new FastDFSUtil();
         if (!redisUtil.hasKey(fileName)) {
-            String fileId = fastDFSUtil.upload2(realPath, file, fileName, extension.split("\\.")[1]);
+            String fileId = fastDFSUtil.upload(file, fileName, extension.split("\\.")[1]);
             System.out.println(fileId);
             redisUtil.set(fileName, fileId);
         } else {
             // 有这个文件表示已经已经上传过了
             System.out.println("文件追加开始了");
             String fileId = (String) redisUtil.get(fileName);
-            new FastDFSUtil().append(fileId, realPath);
+            new FastDFSUtil().append(fileId, file.getInputStream());
         }
     }
 
