@@ -7,7 +7,6 @@ import info.kqkd.cloud.service.IFileService;
 import info.kqkd.cloud.utils.FastDFSUtil;
 import info.kqkd.cloud.utils.RedisUtil;
 import org.csource.common.MyException;
-import org.csource.fastdfs.FileInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -37,76 +36,52 @@ public class FileController {
     @Autowired
     private RedisTemplate redisTemplate;
 
-    @Autowired
-    private RedisUtil redisUtil;
-
-
-
     @GetMapping("/{id}")
     public File getFileByUser(@PathVariable("id") Integer id) {
         return fileService.getById(id);
     }
 
+
+    /**
+     * @param lastModifiedDate 最后修改时间
+     * @param fileSize 文件大小
+     * @return 返回文件已经上传的大小
+     */
     @GetMapping("/getUploadSize")
-    public long getUploadSize( String fileName, String lastModifiedDate) throws IOException, MyException {
-        RedisUtil redisUtil = new RedisUtil();
-        redisUtil.setRedisTemplate(redisTemplate);
-        redisUtil.setDataBase(2);
-        String redisFileKey = "file:%s:%s";
-        String redisFileKeyStr = String.format(redisFileKey, fileName, lastModifiedDate);
-        Map<Object, Object> fileMap = redisUtil.hmget(redisFileKeyStr);
-        if (fileMap.isEmpty()) {
-            System.out.println("文件没有被上传过");
-            return 0;
-        }
-        FileInfo fileInfo = new FastDFSUtil().query((String) fileMap.get("fileId"));
-        System.out.println("文件续传");
-        return fileInfo.getFileSize();
+    public long getUploadSize(String lastModifiedDate, long fileSize) throws IOException, MyException {
+        return fileService.getUploadSize(lastModifiedDate, fileSize);
     }
 
 
+    /**
+     * 文件上传
+     * @param lastModifiedDate 最后修改时间
+     * @param fileName 文件原始名称
+     * @param fileSize 文件大小
+     * @param blob 文件对象
+     */
     @PostMapping("/upload")
-    public void upload(String fileName, String lastModifiedDate, @RequestParam("file") MultipartFile file) throws IOException, MyException {
-        // 获取拓展名
-        String extension = fileName.substring(fileName.lastIndexOf("."));
-        String redisFileKey = "file:%s:%s";
-        String redisFileKeyStr = String.format(redisFileKey, fileName, lastModifiedDate);
-        System.out.println(redisFileKeyStr);
-        redisUtil.setRedisTemplate(redisTemplate);
-        redisUtil.setDataBase(2);
-        FastDFSUtil fastDFSUtil = new FastDFSUtil();
-        if (!redisUtil.hasKey(redisFileKeyStr)) {
-            String fileId = fastDFSUtil.upload(file.getSize(), file.getInputStream(), fileName, extension.split("\\.")[1]);
-            long fileSize = fastDFSUtil.query(fileId).getFileSize();
-            System.out.println(fileId);
-            Map<String, Object> map = new HashMap<>();
-            map.put("fileId", fileId);
-            map.put("uploadSize", fileSize);
-            redisUtil.hmset(redisFileKeyStr, map);
-        } else {
-            // 有这个文件表示已经已经上传过了
-            Map<Object, Object> fileInfo = redisUtil.hmget(redisFileKeyStr);
-            String fileId = (String) fileInfo.get("fileId");
-            fastDFSUtil.append(fileId, file.getInputStream());
-            FileInfo info = fastDFSUtil.query(fileId);
-            System.out.println("追加后的大小为" + info.getFileSize());
-            redisUtil.hset(redisFileKeyStr, "uploadSize", info.getFileSize());
-
-        }
+    public void upload(String lastModifiedDate, String fileName, Long fileSize, @RequestParam("file") MultipartFile blob) throws IOException, MyException {
+        fileService.fileUpload(lastModifiedDate, fileName, fileSize, blob);
     }
 
+    /**
+     *
+     * @param response 响应流
+     * @param fileId fastdfs文件id
+     * @param realFileName  文件原名称
+     */
     @GetMapping("/download")
     public void download(HttpServletResponse response, String fileId, String realFileName) throws IOException, MyException {
-        System.out.println(fileId + realFileName);
         FastDFSUtil.download(response, fileId, realFileName);
     }
 
 
     /**
      * 查询文件列表
-     * @param curr
-     * @param limit
-     * @return
+     * @param curr 当前页
+     * @param limit 每页显示数据量
+     * @return 数据信息和状态码
      */
     @GetMapping("/list")
     public Map<String, Object> fileList(HttpServletRequest request, @RequestParam(value = "curr", defaultValue = "0") Integer curr,
@@ -123,12 +98,15 @@ public class FileController {
     }
 
 
+    /**
+     *
+     * @param ids 要删除的文件id
+     * @return
+     */
     @DeleteMapping("/delete")
     public Map<String, Object> delete(@RequestParam("ids") String[] ids) {
         fileService.removeByIds(Arrays.asList(ids));
         return null;
     }
-
-
 
 }

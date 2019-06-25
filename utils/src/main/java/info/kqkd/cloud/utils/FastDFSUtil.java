@@ -1,12 +1,9 @@
 package info.kqkd.cloud.utils;
 
-import cn.hutool.core.io.IoUtil;
 import org.csource.common.MyException;
 import org.csource.common.NameValuePair;
 import org.csource.fastdfs.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
@@ -26,22 +23,6 @@ public class FastDFSUtil {
         }
     }
 
-
-//    public String upload(String realPath, String fileName, String extension) throws IOException, MyException {
-//        //创建tracker的客户端
-//        TrackerClient tracker = new TrackerClient();
-//        TrackerServer trackerServer = tracker.getConnection();
-//        StorageServer storageServer = null;
-//        //定义storage的客户端
-//        StorageClient1 client = new StorageClient1(trackerServer, storageServer);
-//        //文件元信息
-//        NameValuePair[] metaList = new NameValuePair[1];
-//        metaList[0] = new NameValuePair("fileName", fileName);
-//        //执行上传，将上传成功的存放在web服务器（本机）上的文件上传到 fastDFS
-//        String fileId = client.upload_appender_file1(realPath, extension, metaList);
-//        trackerServer.close();
-//        return fileId;
-//    }
 
     public String upload(long fileSize, InputStream inputStream, String fileName, String extension) throws IOException, MyException {
         //创建tracker的客户端
@@ -95,8 +76,6 @@ public class FastDFSUtil {
      *  FDFS 文件下载类
      * @param response 响应
      * @param fileAddr 文件路径
-     * @throws IOException
-     * @throws MyException
      */
     public static void download(HttpServletResponse response, String fileAddr, String realFileName) throws IOException, MyException {
         TrackerClient tracker = new TrackerClient();
@@ -120,6 +99,13 @@ public class FastDFSUtil {
 
     }
 
+    /**
+     * 文件追加
+     * @param appendFileId
+     * @param inputStream
+     * @throws IOException
+     * @throws MyException
+     */
     public void append(String appendFileId, InputStream inputStream) throws IOException, MyException {
         TrackerClient tracker = new TrackerClient();
         TrackerServer trackerServer = tracker.getConnection();

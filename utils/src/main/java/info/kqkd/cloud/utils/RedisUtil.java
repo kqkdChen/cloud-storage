@@ -13,13 +13,22 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class RedisUtil {
 
-
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate redisTemplate;
      
     public void setRedisTemplate(RedisTemplate redisTemplate) {
         this.redisTemplate = redisTemplate;
     }
 
+
+    /**
+     * 获得指定数据库的连接
+     * @param databaseIndex
+     * @param redisTemplate
+     */
+    public void getSpecificDB(int databaseIndex, RedisTemplate redisTemplate) {
+        setRedisTemplate(redisTemplate);
+        setDataBase(databaseIndex);
+    }
 
     /**
      * 切换数据库
