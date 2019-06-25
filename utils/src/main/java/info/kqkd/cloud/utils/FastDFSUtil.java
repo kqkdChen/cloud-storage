@@ -43,7 +43,7 @@ public class FastDFSUtil {
 //        return fileId;
 //    }
 
-    public String upload(MultipartFile file, String fileName, String extension) throws IOException, MyException {
+    public String upload(long fileSize, InputStream inputStream, String fileName, String extension) throws IOException, MyException {
         //创建tracker的客户端
         TrackerClient tracker = new TrackerClient();
         TrackerServer trackerServer = tracker.getConnection();
@@ -54,24 +54,36 @@ public class FastDFSUtil {
         NameValuePair[] metaList = new NameValuePair[1];
         metaList[0] = new NameValuePair("fileName", fileName);
         //执行上传，将上传成功的存放在web服务器（本机）上的文件上传到 fastDFS
-        String fileId = client.upload_appender_file1(null, file.getSize(),
-                new UploadFileSender(file.getInputStream()), extension, metaList);
+        String fileId = client.upload_appender_file1(null, fileSize,
+                new UploadFileSender(inputStream), extension, metaList);
         trackerServer.close();
         return fileId;
     }
 
 
     private static class UploadFileSender implements UploadCallback {
-        private InputStream inStream;
+        private InputStream in;
 
-        public UploadFileSender(InputStream inStream) {
-            this.inStream = inStream;
+        public UploadFileSender(InputStream in) {
+            this.in = in;
         }
 
         public int send(OutputStream out) throws IOException {
-            int readBytes;
-            while((readBytes = inStream.read()) > 0) {
-                out.write(readBytes);
+            try {
+                BufferedOutputStream bufferOut = new BufferedOutputStream(out);
+                if (in instanceof FileInputStream) {
+                    in = new BufferedInputStream(in);
+                }
+                byte[] buff = new byte[4096];
+                int len;
+                while ((len = in.read(buff, 0, buff.length)) != -1) {
+                    bufferOut.write(buff, 0, len);
+                }
+                bufferOut.flush();
+            } catch (Exception e) {
+                throw e;
+            } finally {
+                in.close();
             }
             return 0;
         }
@@ -91,7 +103,7 @@ public class FastDFSUtil {
         TrackerServer trackerServer = tracker.getConnection();
         StorageServer storageServer = null;
         StorageClient1 client = new StorageClient1(trackerServer, storageServer);
-        response.setContentType("application/force-download");
+//        response.setContentType("application/force-download");
         response.setHeader("Content-Disposition", "attachment;filename=" + realFileName);
         client.download_file1(fileAddr, new MyDownloadCallBack(response.getOutputStream()));
         trackerServer.close();

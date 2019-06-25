@@ -59,18 +59,21 @@ public class FileController {
 
     @PostMapping("/upload")
     public void upload(String fileName, @RequestParam("file") MultipartFile file) throws IOException, MyException {
-        System.out.println(file.getSize());
         // 获取拓展名
         String extension = fileName.substring(fileName.lastIndexOf("."));
         // 重命名文件
-        String saveFileName = UUID.randomUUID() + extension;
+        String newFileName = UUID.randomUUID() + extension;
+        String redisFileKey = "file:%s:%s";  // 模块名:原来文件命:uuid文件名
+        String redisFileKeyStr = String.format(redisFileKey, fileName, newFileName);
+        System.out.println(redisFileKeyStr);
         redisUtil.setRedisTemplate(redisTemplate);
         redisUtil.setDataBase(2);
         FastDFSUtil fastDFSUtil = new FastDFSUtil();
         if (!redisUtil.hasKey(fileName)) {
-            String fileId = fastDFSUtil.upload(file, fileName, extension.split("\\.")[1]);
+            System.out.println("文件第一次上传");
+            String fileId = fastDFSUtil.upload(file.getSize(), file.getInputStream(), fileName, extension.split("\\.")[1]);
             System.out.println(fileId);
-            redisUtil.set(fileName, fileId);
+            redisUtil.set(redisFileKeyStr, fileId);
         } else {
             // 有这个文件表示已经已经上传过了
             System.out.println("文件追加开始了");
