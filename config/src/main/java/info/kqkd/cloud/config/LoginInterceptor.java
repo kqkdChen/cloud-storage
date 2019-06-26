@@ -15,8 +15,10 @@ import java.io.IOException;
 
 public class LoginInterceptor implements HandlerInterceptor {
 
+//    private RedisTemplate redisTemplate;
+
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisUtil redisUtil;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException, ServletException {
@@ -26,8 +28,9 @@ public class LoginInterceptor implements HandlerInterceptor {
             response.setStatus(401);
             return false;
         }
-        RedisUtil redisUtil = new RedisUtil();
-        redisUtil.setRedisTemplate(redisTemplate);
+
+//        RedisUtil redisUtil = new RedisUtil();
+//        redisUtil.setRedisTemplate(redisTemplate);
         redisUtil.setDataBase(1);
         User user  = (User) redisUtil.get(access_token);
         // 当前用户为空登录过期

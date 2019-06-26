@@ -1,5 +1,6 @@
 package info.kqkd.cloud.utils;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -13,22 +14,9 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class RedisUtil {
 
+    @Autowired
     private RedisTemplate redisTemplate;
      
-    public void setRedisTemplate(RedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
-    }
-
-
-    /**
-     * 获得指定数据库的连接
-     * @param databaseIndex
-     * @param redisTemplate
-     */
-    public void getSpecificDB(int databaseIndex, RedisTemplate redisTemplate) {
-        setRedisTemplate(redisTemplate);
-        setDataBase(databaseIndex);
-    }
 
     /**
      * 切换数据库
@@ -38,10 +26,11 @@ public class RedisUtil {
         LettuceConnectionFactory connectionFactory = (LettuceConnectionFactory) redisTemplate.getConnectionFactory();
         if (connectionFactory != null && num != connectionFactory.getDatabase()) {
             connectionFactory.setDatabase(num);
-            this.redisTemplate.setConnectionFactory(connectionFactory);
+            redisTemplate.setConnectionFactory(connectionFactory);
             connectionFactory.resetConnection();
         }
     }
+
 
     //=============================common============================
     /**
@@ -61,7 +50,16 @@ public class RedisUtil {
             return false;
         }
     }
-     
+
+    /**
+     * keys 匹配
+     * @param key
+     * @return
+     */
+    public Set<String> keys(String key) {
+        return redisTemplate.keys(key);
+    }
+
     /**
      * 根据key 获取过期时间
      * @param key 键 不能为null

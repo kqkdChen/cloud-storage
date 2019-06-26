@@ -28,12 +28,12 @@ public interface IFileService extends IService<File> {
     /**
      * 文件上传
      */
-    void fileUpload(String lastModifiedDate, String fileName, Long fileSize, MultipartFile blob) throws IOException, MyException;
+    void fileUpload(File file, String token, MultipartFile blob) throws IOException, MyException;
 
     /**
      * 获取文件已上传的大小
      */
-    long getUploadSize(String lastModifiedDate, long fileSize) throws IOException, MyException;
+    long getUploadSize(Long lastModifiedDate, Long fileSize) throws IOException, MyException;
 
 
 }

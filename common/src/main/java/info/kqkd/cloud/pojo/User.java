@@ -58,5 +58,8 @@ public class User implements Serializable {
     @TableField(exist =  false)
     private List<UserFile> userFiles;
 
+    @TableField(exist = false)
+    private String loginIp;
+
 
 }

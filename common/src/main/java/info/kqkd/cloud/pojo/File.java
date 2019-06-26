@@ -34,9 +34,15 @@ public class File implements Serializable {
     private String fileName;
 
     /**
-     * 文件类型 (jpg | png | mp3 | mp4 | zip )
+     * 文件类型 例如等格式 (jpg | png | mp3 | mp4 | zip )
      */
     private String type;
+
+
+    /**
+     * 是否上传完毕
+     */
+    private Boolean isComplete;
 
     /**
      * 是否为文件夹
@@ -51,7 +57,7 @@ public class File implements Serializable {
     /**
      * 文件大小
      */
-    private Integer fileSize;
+    private Long fileSize;
 
     /**
      * 文件存储位置
@@ -62,6 +68,11 @@ public class File implements Serializable {
      * 缩略图
      */
     private String smUrl;
+
+    /**
+     * 文件最后修改时间
+     */
+    private Long lastModifiedDate;
 
     /**
      * 文件创建时间

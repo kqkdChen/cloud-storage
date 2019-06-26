@@ -34,7 +34,7 @@ public class FileController {
     private IFileService fileService;
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private RedisUtil redisUtil;
 
     @GetMapping("/{id}")
     public File getFileByUser(@PathVariable("id") Integer id) {
@@ -48,21 +48,19 @@ public class FileController {
      * @return 返回文件已经上传的大小
      */
     @GetMapping("/getUploadSize")
-    public long getUploadSize(String lastModifiedDate, long fileSize) throws IOException, MyException {
+    public long getUploadSize(Long lastModifiedDate, Long fileSize) throws IOException, MyException {
         return fileService.getUploadSize(lastModifiedDate, fileSize);
     }
 
 
     /**
      * 文件上传
-     * @param lastModifiedDate 最后修改时间
-     * @param fileName 文件原始名称
-     * @param fileSize 文件大小
      * @param blob 文件对象
      */
     @PostMapping("/upload")
-    public void upload(String lastModifiedDate, String fileName, Long fileSize, @RequestParam("file") MultipartFile blob) throws IOException, MyException {
-        fileService.fileUpload(lastModifiedDate, fileName, fileSize, blob);
+    public void upload(File currFile, String token,
+                       @RequestParam("file") MultipartFile blob) throws IOException, MyException {
+        fileService.fileUpload(currFile, token, blob);
     }
 
     /**
@@ -87,8 +85,6 @@ public class FileController {
     public Map<String, Object> fileList(HttpServletRequest request, @RequestParam(value = "curr", defaultValue = "0") Integer curr,
                                         @RequestParam(value = "limit", defaultValue = "50") Integer limit) {
         String authorization = request.getHeader("Authorization");
-        RedisUtil redisUtil = new RedisUtil();
-        redisUtil.setRedisTemplate(redisTemplate);
         redisUtil.setDataBase(1);
         User user = (User) redisUtil.get(authorization);
         Map<String, Object> map = new HashMap<>();

@@ -32,9 +32,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
     @Autowired
     private UserMapper userMapper;
 
-    @Autowired
-    private RedisTemplate redisTemplate;
-
     @Override
     public Map<String, Object> login(HttpSession session, User user, String verifyCode) {
         Map<String, Object> map = new HashMap<>();

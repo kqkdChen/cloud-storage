@@ -7,7 +7,6 @@ import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -19,31 +18,21 @@ public class UserControllerAop {
 
 
     @Autowired
-    private RedisTemplate redisTemplate;
-
-    @Autowired
     private RedisUtil redisUtil;
 
-//    @Around(value = "execution(* info.kqkd.cloud.service.impl.UserServiceImpl.*(..))")
-//    public Object log(ProceedingJoinPoint joinPoint) throws Throwable {
-//        System.out.println("start log:" + joinPoint.getSignature().getName());
-//        Object object = joinPoint.proceed();
-//
-//        System.out.println("end log:" + joinPoint.getSignature().getName());
-//        return object;
-//    }
 
     @AfterReturning(returning="map", pointcut="execution(* info.kqkd.cloud.service.impl.UserServiceImpl.*(..)))")
     public Object AfterExec(JoinPoint joinPoint, Map<String, Object> map){
         boolean result = (boolean)map.get("result");
         if (result) {
             // 缓存token和当前用户
-            redisUtil.getSpecificDB(1, redisTemplate);
+            redisUtil.setDataBase(1);
             User currentUser = (User) map.get("user");
             String userAccount = currentUser.getUserAccount();
             // 判断用户是否已经登录，已经登录则清除之前的登录信息
-            Set<String> keys = redisTemplate.keys(userAccount + "*");
-            if (keys != null) {
+            Set<String> keys = redisUtil.keys(userAccount + "*");
+
+            if (keys != null && keys.size() > 0) {
                 keys.forEach(k -> redisUtil.del(k));
             }
             String token = userAccount + "_" + IdUtil.simpleUUID();
