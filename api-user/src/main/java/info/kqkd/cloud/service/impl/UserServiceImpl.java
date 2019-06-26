@@ -52,15 +52,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IU
             if (cur != null) {
                 String sign = DigestUtil.md5Hex(cur.getUserPassword() + DigestUtil.md5Hex(randomStr));
                 if (user.getUserPassword().equals(sign)) {
-                    String token = UUID.randomUUID().toString();
-                    RedisUtil redisUtil = new RedisUtil();
-                    redisUtil.setRedisTemplate(redisTemplate);
-                    redisUtil.setDataBase(1);
-                    cur.setUserPassword("");
-                    redisUtil.set(token, cur, 1800);
+                    cur.setUserPassword("");  //清除密码
                     map.put("result", true);
-                    map.put("access_token", token);
-                    cur.setUserPassword("");
                     map.put("user", cur);
                     return map;
                 }

@@ -29,8 +29,6 @@ public class Page implements Serializable {
 
     private String name;
 
-    private String icon;
-
     private String url;
 
     private Integer menuId;

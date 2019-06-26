@@ -33,7 +33,7 @@
     </select>
 
     <select id="selectPageByMenuId" parameterType="int" resultType="Page">
-        select name, url, icon from t_page where menu_id = #{id}
+        select name, url from t_page where menu_id = #{id}
     </select>
 
     <select id="getCurrentUser" parameterType="string" resultMap="UserInfo">

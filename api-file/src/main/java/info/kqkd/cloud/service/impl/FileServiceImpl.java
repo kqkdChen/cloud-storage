@@ -76,6 +76,8 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
             Map<String, Object> map = new HashMap<>();
             map.put("fileId", fileId);
             map.put("uploadSize", currFileSize);
+            System.out.println(fileId);
+            System.out.println(fileName);
             redisUtil.hmset(redisFileKeyStr, map);
         } else {
             // 有这个文件表示已经已经上传过了
@@ -103,7 +105,6 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
         if (fileMap.isEmpty()) {
             return 0;
         }
-
         FileInfo fileInfo = new FastDFSUtil().query((String) fileMap.get("fileId"));
         return fileInfo.getFileSize();
     }
