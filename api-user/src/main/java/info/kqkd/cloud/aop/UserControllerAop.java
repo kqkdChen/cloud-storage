@@ -31,7 +31,6 @@ public class UserControllerAop {
             String userAccount = currentUser.getUserAccount();
             // 判断用户是否已经登录，已经登录则清除之前的登录信息
             Set<String> keys = redisUtil.keys(userAccount + "*");
-
             if (keys != null && keys.size() > 0) {
                 keys.forEach(k -> redisUtil.del(k));
             }

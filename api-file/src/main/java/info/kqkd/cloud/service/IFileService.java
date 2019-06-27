@@ -7,6 +7,7 @@ import org.csource.common.MyException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Map;
 
 /**
  * <p>
@@ -28,12 +29,17 @@ public interface IFileService extends IService<File> {
     /**
      * 文件上传
      */
-    void fileUpload(File file, String token, MultipartFile blob) throws IOException, MyException;
+    long fileUpload(File file, String userId, MultipartFile blob) throws IOException, MyException;
 
     /**
      * 获取文件已上传的大小
      */
     long getUploadSize(Long lastModifiedDate, Long fileSize) throws IOException, MyException;
 
+
+    /**
+     * 保存文件已上传的大小
+     */
+    boolean saveUploadSize(File currFile, String userId, String uploadSize );
 
 }

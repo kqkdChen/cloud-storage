@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import info.kqkd.cloud.dao.FileMapper;
 import info.kqkd.cloud.dao.UserFileMapper;
+import info.kqkd.cloud.dao.UserMapper;
 import info.kqkd.cloud.pojo.File;
 import info.kqkd.cloud.pojo.User;
 import info.kqkd.cloud.pojo.UserFile;
@@ -15,12 +16,17 @@ import info.kqkd.cloud.utils.RedisUtil;
 import org.csource.common.MyException;
 import org.csource.fastdfs.FileInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.SessionCallback;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -39,6 +45,9 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
 
     @Autowired
     private FileMapper fileMapper;
+
+    @Autowired
+    private UserMapper userMapper;
 
     @Autowired
     private UserFileMapper userFileMapper;
@@ -69,7 +78,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
 
     @Override
     @Transactional
-    public void fileUpload(File file, String token, MultipartFile blob) throws IOException, MyException {
+    public long fileUpload(File file, String userId, MultipartFile blob) throws IOException, MyException {
         String fileName = file.getFileName();
         long lastModifiedDate = file.getLastModifiedDate();
         long fileSize = file.getFileSize();
@@ -77,15 +86,19 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
         String redisFileKey = "file:%d:%d";
         // 当前上传文件的 redis key 设计 file:fileName:lastModifiedDate:fileSize
         String redisFileKeyStr = String.format(redisFileKey, lastModifiedDate, fileSize);
-        redisUtil.setDataBase(2);
         FastDFSUtil fastDFSUtil = new FastDFSUtil();
+
+        redisUtil.setDataBase(2);
         if (!redisUtil.hasKey(redisFileKeyStr)) {
             String fileId = fastDFSUtil.upload(blob.getSize(), blob.getInputStream(), fileName, extension);
             long currFileSize = fastDFSUtil.query(fileId).getFileSize();
             Map<String, Object> map = new HashMap<>();
             map.put("fileId", fileId);
             map.put("uploadSize", currFileSize);
+            System.out.println(redisUtil.getDataBaseIndex());
             redisUtil.hmset(redisFileKeyStr, map);
+            redisUtil.exec();
+            return currFileSize;
         } else {
             // 有这个文件表示已经已经上传过了
             Map<Object, Object> fileInfo = redisUtil.hmget(redisFileKeyStr);
@@ -93,36 +106,32 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
             fastDFSUtil.append(fileId, blob.getInputStream());
             FileInfo info = fastDFSUtil.query(fileId);
             long currFileSize = info.getFileSize();
+            System.out.println(redisUtil.getDataBaseIndex());
+            redisUtil.hset(redisFileKeyStr, "uploadSize", info.getFileSize());
             if (fileSize == currFileSize) {
+                System.out.println(redisUtil.getDataBaseIndex());
                 redisUtil.del(redisFileKeyStr);
-                redisUtil.setDataBase(1);
-                User user = (User) redisUtil.get(token);
+                redisUtil.exec();
                 file.setFileAddr(fileId);
                 file.setIsComplete(true);
                 file.setType(extension);
                 fileMapper.insert(file);
                 UserFile userFile = new UserFile();
+                User user = userMapper.selectById(userId);
                 userFile.setUserId(user.getId());
                 userFile.setFileId(file.getId());
                 userFileMapper.insert(userFile);
-                return;
+                return currFileSize;
             }
-            redisUtil.hset(redisFileKeyStr, "uploadSize", info.getFileSize());
+            redisUtil.exec();
+            return currFileSize;
         }
     }
 
     @Override
     public long getUploadSize(Long lastModifiedDate, Long fileSize) throws IOException, MyException {
-        // 当前上传文件的 redis key 设计 file:lastModifiedDate:fileSize
-        String redisFileKey = "file:%d:%d";
-        String redisFileKeyStr = String.format(redisFileKey, lastModifiedDate, fileSize);
-        redisUtil.setDataBase(2);
-        Map<Object, Object> fileMap = redisUtil.hmget(redisFileKeyStr);
-        // 先去redis里面找，判断是否有文件缓存
-        if (!fileMap.isEmpty()) {
-            return (Integer)fileMap.get("uploadSize");
-        }
-        // redis里面没有就去数据库找，如果有则触发秒传
+        String redisFileKeyStr = String.format("file:%d:%d", lastModifiedDate, fileSize);
+        // 去数据库找，如果有则触发秒传
         QueryWrapper<File> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("last_modified_date", lastModifiedDate);
         queryWrapper.eq("file_size", fileSize);
@@ -130,7 +139,18 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
         if (file != null) {
             return file.getFileSize();
         }
+        // 去redis里面找，判断是否有文件缓存
+        redisUtil.setDataBase(2);
+        Map<Object, Object> fileMap = redisUtil.hmget(redisFileKeyStr);
+        if (!fileMap.isEmpty()) {
+            return (Integer)fileMap.get("uploadSize");
+        }
         return 0;
+    }
+
+    @Override
+    public boolean saveUploadSize(File currFile, String userId, String uploadSize) {
+        return false;
     }
 
 }

@@ -58,9 +58,9 @@ public class FileController {
      * @param blob 文件对象
      */
     @PostMapping("/upload")
-    public void upload(File currFile, String token,
+    public long upload(File currFile, String userId,
                        @RequestParam("file") MultipartFile blob) throws IOException, MyException {
-        fileService.fileUpload(currFile, token, blob);
+        return fileService.fileUpload(currFile, userId, blob);
     }
 
     /**

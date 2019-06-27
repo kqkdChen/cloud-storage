@@ -15,22 +15,17 @@ import java.io.IOException;
 
 public class LoginInterceptor implements HandlerInterceptor {
 
-//    private RedisTemplate redisTemplate;
-
     @Autowired
     private RedisUtil redisUtil;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException, ServletException {
+    public  boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws IOException, ServletException, InterruptedException {
         String access_token = request.getHeader("Authorization");
         // 令牌为空没有登录
         if (StrUtil.isEmpty(access_token)) {
             response.setStatus(401);
             return false;
         }
-
-//        RedisUtil redisUtil = new RedisUtil();
-//        redisUtil.setRedisTemplate(redisTemplate);
         redisUtil.setDataBase(1);
         User user  = (User) redisUtil.get(access_token);
         // 当前用户为空登录过期
@@ -40,6 +35,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         }
         // 更新活跃时间
         redisUtil.expire(access_token, 1800);
+
         return true;
     }
 

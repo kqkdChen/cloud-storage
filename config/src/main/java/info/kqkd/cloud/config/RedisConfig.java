@@ -3,6 +3,7 @@ package info.kqkd.cloud.config;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
@@ -39,13 +40,14 @@ public class RedisConfig {
                 .cacheDefaults(config)
                 .transactionAware()
                 .build();
-
         return redisCacheManager;
     }
 
     @Bean("redisTemplate")
+    @Scope("prototype")
     public RedisTemplate<String,Object> redisTemplate(LettuceConnectionFactory redisConnectionFactory){
         RedisTemplate<String,Object> redisTemplate = new RedisTemplate<>();
+        redisConnectionFactory.setDatabase(2);
         redisTemplate.setConnectionFactory(redisConnectionFactory);
 //        redisTemplate.setDefaultSerializer(new GenericJackson2JsonRedisSerializer());
         redisTemplate.setKeySerializer(keySerializer());

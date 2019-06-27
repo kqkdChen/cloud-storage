@@ -1,6 +1,7 @@
 package info.kqkd.cloud.utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -12,11 +13,23 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 @Component
+@Scope("prototype")
 public class RedisUtil {
+
+    private volatile boolean isUsed = false;
+
 
     @Autowired
     private RedisTemplate redisTemplate;
-     
+
+
+    public void multi() {
+        redisTemplate.multi();
+    }
+
+    public void exec() {
+        redisTemplate.exec();
+    }
 
     /**
      * 切换数据库
@@ -26,11 +39,16 @@ public class RedisUtil {
         LettuceConnectionFactory connectionFactory = (LettuceConnectionFactory) redisTemplate.getConnectionFactory();
         if (connectionFactory != null && num != connectionFactory.getDatabase()) {
             connectionFactory.setDatabase(num);
-            redisTemplate.setConnectionFactory(connectionFactory);
-            connectionFactory.resetConnection();
+//            redisTemplate.setConnectionFactory(connectionFactory);
+//            connectionFactory.resetConnection();
         }
     }
 
+
+    public int getDataBaseIndex() {
+        LettuceConnectionFactory connectionFactory = (LettuceConnectionFactory) redisTemplate.getConnectionFactory();
+        return connectionFactory.getDatabase();
+    }
 
     //=============================common============================
     /**
