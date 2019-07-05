@@ -57,8 +57,8 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
 
     @Override
     public IPage<File> fileList(Integer curr, Integer limit, String userId) {
-        IPage<File> fileIPage = fileMapper.fileList(new Page<>(curr, limit), userId);
-        List<File> files = fileIPage.getRecords();
+        IPage<File> filePage = fileMapper.fileList(new Page<>(curr, limit), userId);
+        List<File> files = filePage.getRecords();
         Iterator<File> iterator = files.iterator();
         while (iterator.hasNext()) {
             File file = iterator.next();
@@ -72,12 +72,11 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, File> implements IF
             }
 
         }
-        fileIPage.setRecords(files);
-        return fileIPage;
+        filePage.setRecords(files);
+        return filePage;
     }
 
     @Override
-    @Transactional
     public long fileUpload(File file, String userId, MultipartFile blob) throws IOException, MyException {
         String fileName = file.getFileName();
         long lastModifiedDate = file.getLastModifiedDate();
